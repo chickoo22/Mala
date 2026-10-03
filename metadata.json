@@ -1,0 +1,6 @@
+{
+  "name": "Mala Jaap Counter",
+  "description": "Offline Mala Jaap counter with custom mantra goals, tactile beads feedback, and daily progress insight charts.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
