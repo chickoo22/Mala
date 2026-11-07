@@ -47,6 +47,7 @@ import com.example.data.entity.DailySummary
 import com.example.data.entity.JaapSessionEntity
 import com.example.data.entity.MantraEntity
 import com.example.ui.components.DailyProgressChart
+import com.example.ui.components.NativeAdCard
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -208,6 +209,10 @@ fun InsightsScreen(
                 dailyGoalJaaps = dailyGoalJaaps,
                 daysCount = chartDaysOption
             )
+        }
+
+        item {
+            NativeAdCard(modifier = Modifier.fillMaxWidth())
         }
 
         // Mantra Distribution / Breakdown

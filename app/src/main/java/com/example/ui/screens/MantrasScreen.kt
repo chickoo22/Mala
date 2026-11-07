@@ -67,6 +67,7 @@ import androidx.compose.ui.unit.sp
 import com.example.data.entity.MantraEntity
 import com.example.ui.MalaViewModel
 import com.example.ui.components.AddEditMantraDialog
+import com.example.ui.components.AdMobBanner
 
 private val MANTRA_CATEGORIES = listOf(
     "All",
@@ -82,6 +83,7 @@ fun MantrasScreen(
     viewModel: MalaViewModel,
     mantras: List<MantraEntity>,
     activeMantra: MantraEntity?,
+    currentBead: Int,
     onMantraSelected: (MantraEntity) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -90,6 +92,16 @@ fun MantrasScreen(
     var deletingMantraId by remember { mutableStateOf<Long?>(null) }
     var searchQuery by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf("All") }
+    var pendingMantraSelection by remember { mutableStateOf<MantraEntity?>(null) }
+
+    val selectMantraForChanting: (MantraEntity) -> Unit = { mantra ->
+        if (mantra.id != activeMantra?.id && currentBead > 0) {
+            pendingMantraSelection = mantra
+        } else {
+            viewModel.selectMantra(mantra.id)
+            onMantraSelected(mantra)
+        }
+    }
 
     val filteredMantras = remember(mantras, searchQuery, selectedCategory) {
         mantras.filter { mantra ->
@@ -97,7 +109,11 @@ fun MantrasScreen(
                 "Shiva" -> mantra.name.contains("Shiva", ignoreCase = true) ||
                         mantra.name.contains("Mrityunjaya", ignoreCase = true)
                 "Krishna & Vishnu" -> mantra.name.contains("Krishna", ignoreCase = true) ||
-                        mantra.name.contains("Vasudeva", ignoreCase = true)
+                        mantra.name.contains("Vasudeva", ignoreCase = true) ||
+                        mantra.name.contains("Narayana", ignoreCase = true) ||
+                        mantra.name.contains("Ram", ignoreCase = true) ||
+                        mantra.name.contains("Narasimha", ignoreCase = true) ||
+                        mantra.name.contains("Dhanvantari", ignoreCase = true)
                 "Hanuman & Ganesh" -> mantra.name.contains("Hanuman", ignoreCase = true) ||
                         mantra.name.contains("Ganesh", ignoreCase = true)
                 "Devi & Shakti" -> mantra.name.contains("Lakshmi", ignoreCase = true) ||
@@ -106,7 +122,11 @@ fun MantrasScreen(
                 "Vedic & Peace" -> mantra.name.contains("Gayatri", ignoreCase = true) ||
                         mantra.name.contains("Surya", ignoreCase = true) ||
                         mantra.name.contains("Shanti", ignoreCase = true) ||
-                        mantra.name.contains("Mani", ignoreCase = true)
+                        mantra.name.contains("Mani", ignoreCase = true) ||
+                        mantra.name.contains("Lokah", ignoreCase = true) ||
+                        mantra.name.contains("Tara", ignoreCase = true) ||
+                        mantra.name.contains("Navkar", ignoreCase = true) ||
+                        mantra.name.contains("Mool", ignoreCase = true)
                 else -> true
             }
 
@@ -191,6 +211,25 @@ fun MantrasScreen(
         )
     }
 
+    if (pendingMantraSelection != null) {
+        val mantra = pendingMantraSelection!!
+        AlertDialog(
+            onDismissRequest = { pendingMantraSelection = null },
+            title = { Text("Switch mantra?") },
+            text = { Text("You have $currentBead repetitions in your current round. Switching to ${mantra.name} will clear that partial count.") },
+            confirmButton = {
+                Button(onClick = {
+                    viewModel.selectMantra(mantra.id)
+                    pendingMantraSelection = null
+                    onMantraSelected(mantra)
+                }) { Text("Switch and start over") }
+            },
+            dismissButton = {
+                OutlinedButton(onClick = { pendingMantraSelection = null }) { Text("Keep counting") }
+            }
+        )
+    }
+
     Box(modifier = modifier.fillMaxSize()) {
         LazyColumn(
             modifier = Modifier
@@ -231,7 +270,7 @@ fun MantrasScreen(
                             modifier = Modifier.size(16.dp)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("Restore 13", style = MaterialTheme.typography.labelSmall)
+                        Text("Restore defaults", style = MaterialTheme.typography.labelSmall)
                     }
                 }
 
@@ -297,15 +336,16 @@ fun MantrasScreen(
                 )
             }
 
+            item {
+                AdMobBanner(modifier = Modifier.fillMaxWidth())
+            }
+
             items(filteredMantras, key = { it.id }) { mantra ->
                 val isActive = mantra.id == activeMantra?.id
                 MantraGoalCard(
                     mantra = mantra,
                     isActive = isActive,
-                    onSelect = {
-                        viewModel.selectMantra(mantra.id)
-                        onMantraSelected(mantra)
-                    },
+                    onSelect = { selectMantraForChanting(mantra) },
                     onEdit = { editingMantra = mantra },
                     onDelete = { deletingMantraId = mantra.id }
                 )
@@ -366,9 +406,7 @@ private fun MantraGoalCard(
         Column(modifier = Modifier.padding(16.dp)) {
             // Title Header Row
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { onSelect() },
+                modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -527,11 +565,11 @@ private fun MantraGoalCard(
                             shape = RoundedCornerShape(10.dp),
                             modifier = Modifier.padding(end = 6.dp)
                         ) {
-                            Text("Set Active", style = MaterialTheme.typography.labelMedium)
+                            Text("Use for chanting", style = MaterialTheme.typography.labelMedium)
                         }
                     }
 
-                    IconButton(onClick = onEdit, modifier = Modifier.size(36.dp)) {
+                    IconButton(onClick = onEdit, modifier = Modifier.size(48.dp)) {
                         Icon(
                             Icons.Default.Edit,
                             contentDescription = "Edit Goal",
@@ -539,7 +577,7 @@ private fun MantraGoalCard(
                         )
                     }
 
-                    IconButton(onClick = onDelete, modifier = Modifier.size(36.dp)) {
+                    IconButton(onClick = onDelete, modifier = Modifier.size(48.dp)) {
                         Icon(
                             Icons.Default.Delete,
                             contentDescription = "Delete Mantra",

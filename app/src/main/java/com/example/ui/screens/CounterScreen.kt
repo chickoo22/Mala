@@ -28,11 +28,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material.icons.filled.TouchApp
 import androidx.compose.material.icons.filled.Undo
 import androidx.compose.material.icons.filled.Vibration
@@ -82,6 +82,7 @@ fun CounterScreen(
     soundEnabled: Boolean,
     vibrationEnabled: Boolean,
     showLyrics: Boolean,
+    showCountingHint: Boolean,
     justCompletedMala: Boolean,
     onNavigateToMantras: () -> Unit,
     modifier: Modifier = Modifier
@@ -92,6 +93,46 @@ fun CounterScreen(
     val progressFraction = (completedMalasToday.toFloat() / dailyGoalMalas.toFloat()).coerceIn(0f, 1f)
     var isMantraCardExpanded by remember { mutableStateOf(false) }
     var showQuickSwitchDialog by remember { mutableStateOf(false) }
+    var showResetConfirmation by remember { mutableStateOf(false) }
+    var pendingMantra by remember { mutableStateOf<MantraEntity?>(null) }
+
+    if (pendingMantra != null) {
+        val mantra = pendingMantra!!
+        AlertDialog(
+            onDismissRequest = { pendingMantra = null },
+            title = { Text("Switch mantra?") },
+            text = {
+                Text("You have counted $currentBead of $targetBeads repetitions in this round. Switching to ${mantra.name} will start a new round and clear this partial count.")
+            },
+            confirmButton = {
+                Button(onClick = {
+                    viewModel.selectMantra(mantra.id)
+                    pendingMantra = null
+                    showQuickSwitchDialog = false
+                }) { Text("Switch and start over") }
+            },
+            dismissButton = {
+                OutlinedButton(onClick = { pendingMantra = null }) { Text("Keep counting") }
+            }
+        )
+    }
+
+    if (showResetConfirmation) {
+        AlertDialog(
+            onDismissRequest = { showResetConfirmation = false },
+            title = { Text("Reset this round?") },
+            text = { Text("This will clear your current $currentBead of $targetBeads repetition count. Completed malas are not affected.") },
+            confirmButton = {
+                Button(onClick = {
+                    viewModel.resetCurrentMala()
+                    showResetConfirmation = false
+                }) { Text("Reset round") }
+            },
+            dismissButton = {
+                OutlinedButton(onClick = { showResetConfirmation = false }) { Text("Cancel") }
+            }
+        )
+    }
 
     // Celebration Dialog on completing 1 full Mala (108 beads)
     if (justCompletedMala) {
@@ -195,8 +236,12 @@ fun CounterScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clickable {
-                                        viewModel.selectMantra(mantra.id)
-                                        showQuickSwitchDialog = false
+                                        if (mantra.id != activeMantra?.id && currentBead > 0) {
+                                            pendingMantra = mantra
+                                        } else {
+                                            viewModel.selectMantra(mantra.id)
+                                            showQuickSwitchDialog = false
+                                        }
                                     }
                             ) {
                                 Row(
@@ -274,8 +319,8 @@ fun CounterScreen(
             .padding(horizontal = 20.dp, vertical = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // First-Time User UX Helper Banner
-        Surface(
+        // The hint is shown once and remains dismissed across future sessions.
+        if (showCountingHint) Surface(
             color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
             shape = RoundedCornerShape(12.dp),
             modifier = Modifier
@@ -294,11 +339,18 @@ fun CounterScreen(
                 )
                 Spacer(modifier = Modifier.width(10.dp))
                 Text(
-                    text = "Tap the bead wheel or screen anywhere to count your Jaap.",
+                    text = "Tap the mala wheel to count each repetition.",
                     style = MaterialTheme.typography.bodySmall.copy(
                         color = MaterialTheme.colorScheme.onSecondaryContainer,
                         fontWeight = FontWeight.Medium
-                    )
+                    ),
+                    modifier = Modifier.weight(1f)
+                )
+                IconButton(
+                    onClick = { viewModel.dismissCountingHint() },
+                    modifier = Modifier.size(48.dp)
+                ) {
+                    Icon(Icons.Default.Close, contentDescription = "Dismiss counting hint")
                 )
             }
         }
@@ -363,7 +415,7 @@ fun CounterScreen(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         IconButton(
                             onClick = { viewModel.toggleSound() },
-                            modifier = Modifier.size(36.dp)
+                            modifier = Modifier.size(48.dp)
                         ) {
                             Icon(
                                 if (soundEnabled) Icons.Default.VolumeUp else Icons.Default.VolumeOff,
@@ -374,7 +426,7 @@ fun CounterScreen(
 
                         IconButton(
                             onClick = { viewModel.toggleVibration() },
-                            modifier = Modifier.size(36.dp)
+                            modifier = Modifier.size(48.dp)
                         ) {
                             Icon(
                                 Icons.Default.Vibration,
@@ -383,16 +435,6 @@ fun CounterScreen(
                             )
                         }
 
-                        IconButton(
-                            onClick = { showQuickSwitchDialog = true },
-                            modifier = Modifier.size(36.dp)
-                        ) {
-                            Icon(
-                                Icons.Default.SwapHoriz,
-                                contentDescription = "Switch Mantra",
-                                tint = MaterialTheme.colorScheme.primary
-                            )
-                        }
                     }
                 }
 
@@ -448,7 +490,7 @@ fun CounterScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Quick Controls: Undo, Reset Round, Switch
+        // Quick controls are deliberately limited to correcting the current round.
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.Center,
@@ -467,7 +509,7 @@ fun CounterScreen(
             }
 
             OutlinedButton(
-                onClick = { viewModel.resetCurrentMala() },
+                onClick = { showResetConfirmation = true },
                 modifier = Modifier
                     .padding(horizontal = 6.dp)
                     .testTag("reset_round_button"),

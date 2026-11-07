@@ -46,7 +46,7 @@ class MalaDaoTest {
         repository.checkAndSeedDefaultMantras()
         val mantras = repository.allMantras.first()
         assertTrue("Mantras should be seeded", mantras.isNotEmpty())
-        assertEquals(13, mantras.size)
+        assertEquals(24, mantras.size)
 
         val active = repository.activeMantra.first()
         assertNotNull("Active mantra should be present", active)

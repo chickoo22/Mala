@@ -204,6 +204,78 @@ class MalaRepository(
                 beadsPerMala = 108,
                 isActive = false,
                 colorHex = 0xFFF9A825 // Wealth Gold
+            ),
+            MantraEntity(
+                name = "Om Namo Narayanaya",
+                transliteration = "Om Namo Narayanaya",
+                meaning = "I bow to Narayana, the all-pervading divine presence and protector.",
+                dailyGoalMalas = 1,
+                beadsPerMala = 108,
+                isActive = false,
+                colorHex = 0xFF1E88E5
+            ),
+            MantraEntity(
+                name = "Sri Ram Jai Ram",
+                transliteration = "Sri Ram Jai Ram Jai Jai Ram",
+                meaning = "A devotional remembrance of Rama, cultivated for steadiness, devotion, and inner peace.",
+                dailyGoalMalas = 1,
+                beadsPerMala = 108,
+                isActive = false,
+                colorHex = 0xFFEF6C00
+            ),
+            MantraEntity(
+                name = "Narasimha Mantra",
+                transliteration = "Om Namo Bhagavate Narasimhaya",
+                meaning = "A prayer to Narasimha, traditionally remembered for courage, protection, and overcoming fear.",
+                dailyGoalMalas = 1,
+                beadsPerMala = 108,
+                isActive = false,
+                colorHex = 0xFF6D4C41
+            ),
+            MantraEntity(
+                name = "Dhanvantari Mantra",
+                transliteration = "Om Namo Bhagavate Vasudevaya Dhanvantaraye Amrita-kalasha Hastaya",
+                meaning = "A traditional prayer to Dhanvantari, associated with healing, balance, and well-being.",
+                dailyGoalMalas = 1,
+                beadsPerMala = 108,
+                isActive = false,
+                colorHex = 0xFF00838F
+            ),
+            MantraEntity(
+                name = "Lokah Samastah",
+                transliteration = "Lokah Samastah Sukhino Bhavantu",
+                meaning = "May all beings everywhere be happy, free, and at peace.",
+                dailyGoalMalas = 1,
+                beadsPerMala = 108,
+                isActive = false,
+                colorHex = 0xFF43A047
+            ),
+            MantraEntity(
+                name = "Green Tara Mantra",
+                transliteration = "Om Tare Tuttare Ture Soha",
+                meaning = "A Tibetan Buddhist mantra traditionally associated with compassionate action and liberation from fear.",
+                dailyGoalMalas = 1,
+                beadsPerMala = 108,
+                isActive = false,
+                colorHex = 0xFF00897B
+            ),
+            MantraEntity(
+                name = "Jain Navkar Mantra",
+                transliteration = "Namo Arihantanam, Namo Siddhanam, Namo Ayariyanam",
+                meaning = "A foundational Jain prayer offering reverence to enlightened beings, teachers, and the spiritual community.",
+                dailyGoalMalas = 1,
+                beadsPerMala = 108,
+                isActive = false,
+                colorHex = 0xFF5E35B1
+            ),
+            MantraEntity(
+                name = "Mool Mantar",
+                transliteration = "Ik Onkar Sat Nam Karta Purakh Nirbhau Nirvair",
+                meaning = "The opening Sikh declaration of one divine reality: true, creative, without fear, and without enmity.",
+                dailyGoalMalas = 1,
+                beadsPerMala = 108,
+                isActive = false,
+                colorHex = 0xFFF9A825
             )
         )
 

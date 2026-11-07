@@ -65,7 +65,6 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.ui.MalaViewModel
-import com.example.ui.components.AdMobBanner
 import com.example.ui.screens.CounterScreen
 import com.example.ui.screens.InsightsScreen
 import com.example.ui.screens.MantrasScreen
@@ -114,6 +113,7 @@ fun MalaJaapApp(viewModel: MalaViewModel = viewModel()) {
     val soundEnabled by viewModel.soundEnabled.collectAsStateWithLifecycle()
     val vibrationEnabled by viewModel.vibrationEnabled.collectAsStateWithLifecycle()
     val showLyrics by viewModel.showLyrics.collectAsStateWithLifecycle()
+    val showCountingHint by viewModel.showCountingHint.collectAsStateWithLifecycle()
     val justCompletedMala by viewModel.justCompletedMala.collectAsStateWithLifecycle()
 
     ModalNavigationDrawer(
@@ -308,9 +308,7 @@ fun MalaJaapApp(viewModel: MalaViewModel = viewModel()) {
             },
             bottomBar = {
                 if (currentScreen != MalaScreen.PRIVACY_POLICY) {
-                    Column {
-                        AdMobBanner()
-                        NavigationBar(
+                    NavigationBar(
                             containerColor = MaterialTheme.colorScheme.surface,
                             tonalElevation = 6.dp,
                             modifier = Modifier.testTag("bottom_nav_bar")
@@ -357,7 +355,6 @@ fun MalaJaapApp(viewModel: MalaViewModel = viewModel()) {
                                 modifier = Modifier.testTag("nav_item_insights")
                             )
                         }
-                    }
                 }
             }
         ) { innerPadding ->
@@ -373,6 +370,7 @@ fun MalaJaapApp(viewModel: MalaViewModel = viewModel()) {
                         soundEnabled = soundEnabled,
                         vibrationEnabled = vibrationEnabled,
                         showLyrics = showLyrics,
+                        showCountingHint = showCountingHint,
                         justCompletedMala = justCompletedMala,
                         onNavigateToMantras = { currentScreen = MalaScreen.MANTRAS },
                         modifier = Modifier.padding(innerPadding)
@@ -384,6 +382,7 @@ fun MalaJaapApp(viewModel: MalaViewModel = viewModel()) {
                         viewModel = viewModel,
                         mantras = allMantras,
                         activeMantra = activeMantra,
+                        currentBead = currentBead,
                         onMantraSelected = {
                             currentScreen = MalaScreen.COUNTER
                         },

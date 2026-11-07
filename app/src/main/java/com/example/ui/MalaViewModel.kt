@@ -1,6 +1,7 @@
 package com.example.ui
 
 import android.app.Application
+import android.content.Context
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.data.MalaDatabase
@@ -24,6 +25,7 @@ class MalaViewModel(application: Application) : AndroidViewModel(application) {
     private val repository = MalaRepository(database.mantraDao(), database.jaapSessionDao())
     private val hapticHelper = HapticFeedbackHelper(application)
     private val soundHelper = SoundFeedbackHelper()
+    private val preferences = application.getSharedPreferences("mala_settings", Context.MODE_PRIVATE)
 
     val allMantras: StateFlow<List<MantraEntity>> = repository.allMantras
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
@@ -67,6 +69,9 @@ class MalaViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _showLyrics = MutableStateFlow(true)
     val showLyrics: StateFlow<Boolean> = _showLyrics.asStateFlow()
+
+    private val _showCountingHint = MutableStateFlow(!preferences.getBoolean("counting_hint_dismissed", false))
+    val showCountingHint: StateFlow<Boolean> = _showCountingHint.asStateFlow()
 
     private val _justCompletedMala = MutableStateFlow(false)
     val justCompletedMala: StateFlow<Boolean> = _justCompletedMala.asStateFlow()
@@ -140,6 +145,11 @@ class MalaViewModel(application: Application) : AndroidViewModel(application) {
 
     fun toggleLyrics() {
         _showLyrics.value = !_showLyrics.value
+    }
+
+    fun dismissCountingHint() {
+        _showCountingHint.value = false
+        preferences.edit().putBoolean("counting_hint_dismissed", true).apply()
     }
 
     fun selectMantra(mantraId: Long) {
