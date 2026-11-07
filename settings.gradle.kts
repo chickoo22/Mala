@@ -22,6 +22,6 @@ dependencyResolutionManagement {
   }
 }
 
-rootProject.name = "Mala Jaap"
+rootProject.name = "Sadhana Pulse"
 
 include(":app")

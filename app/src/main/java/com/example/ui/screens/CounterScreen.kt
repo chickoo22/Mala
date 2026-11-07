@@ -18,18 +18,22 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.SwapHoriz
+import androidx.compose.material.icons.filled.TouchApp
 import androidx.compose.material.icons.filled.Undo
 import androidx.compose.material.icons.filled.Vibration
 import androidx.compose.material.icons.filled.VolumeOff
@@ -39,6 +43,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -70,6 +75,7 @@ import com.example.ui.components.MalaBeadsWheel
 fun CounterScreen(
     viewModel: MalaViewModel,
     activeMantra: MantraEntity?,
+    allMantras: List<MantraEntity>,
     currentBead: Int,
     sessionMalas: Int,
     todayTotalMalas: Int,
@@ -85,6 +91,7 @@ fun CounterScreen(
     val completedMalasToday = sessionMalas + todayTotalMalas
     val progressFraction = (completedMalasToday.toFloat() / dailyGoalMalas.toFloat()).coerceIn(0f, 1f)
     var isMantraCardExpanded by remember { mutableStateOf(false) }
+    var showQuickSwitchDialog by remember { mutableStateOf(false) }
 
     // Celebration Dialog on completing 1 full Mala (108 beads)
     if (justCompletedMala) {
@@ -150,6 +157,116 @@ fun CounterScreen(
         )
     }
 
+    // Quick Mantra Switcher Dialog
+    if (showQuickSwitchDialog) {
+        AlertDialog(
+            onDismissRequest = { showQuickSwitchDialog = false },
+            title = {
+                Text(
+                    text = "Select Chanting Mantra",
+                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
+                )
+            },
+            text = {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(350.dp)
+                ) {
+                    Text(
+                        text = "Choose from your sacred mantra library:",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    LazyColumn(
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        items(allMantras) { mantra ->
+                            val isSelected = mantra.id == activeMantra?.id
+                            val color = mantra.colorHex?.let { Color(it) } ?: MaterialTheme.colorScheme.primary
+                            Card(
+                                shape = RoundedCornerShape(12.dp),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface
+                                ),
+                                elevation = CardDefaults.cardElevation(defaultElevation = if (isSelected) 2.dp else 1.dp),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        viewModel.selectMantra(mantra.id)
+                                        showQuickSwitchDialog = false
+                                    }
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(12.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier.weight(1f)
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(12.dp)
+                                                .background(color, CircleShape)
+                                        )
+                                        Spacer(modifier = Modifier.width(10.dp))
+                                        Column {
+                                            Text(
+                                                text = mantra.name,
+                                                style = MaterialTheme.typography.titleSmall.copy(
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
+                                                ),
+                                                maxLines = 1
+                                            )
+                                            if (mantra.transliteration.isNotBlank()) {
+                                                Text(
+                                                    text = mantra.transliteration,
+                                                    style = MaterialTheme.typography.bodySmall.copy(
+                                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                    ),
+                                                    maxLines = 1
+                                                )
+                                            }
+                                        }
+                                    }
+                                    if (isSelected) {
+                                        Icon(
+                                            imageVector = Icons.Default.Check,
+                                            contentDescription = "Selected",
+                                            tint = MaterialTheme.colorScheme.primary
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                OutlinedButton(onClick = { showQuickSwitchDialog = false }) {
+                    Text("Close")
+                }
+            },
+            dismissButton = {
+                Button(
+                    onClick = {
+                        showQuickSwitchDialog = false
+                        onNavigateToMantras()
+                    }
+                ) {
+                    Text("Manage Library")
+                }
+            }
+        )
+    }
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -157,6 +274,35 @@ fun CounterScreen(
             .padding(horizontal = 20.dp, vertical = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        // First-Time User UX Helper Banner
+        Surface(
+            color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
+            shape = RoundedCornerShape(12.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 12.dp)
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.TouchApp,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.secondary,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(10.dp))
+                Text(
+                    text = "Tap the bead wheel or screen anywhere to count your Jaap.",
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        color = MaterialTheme.colorScheme.onSecondaryContainer,
+                        fontWeight = FontWeight.Medium
+                    )
+                )
+            }
+        }
+
         // Active Mantra Header Card
         Card(
             shape = RoundedCornerShape(20.dp),
@@ -178,7 +324,7 @@ fun CounterScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
                             .weight(1f)
-                            .clickable { onNavigateToMantras() }
+                            .clickable { showQuickSwitchDialog = true }
                     ) {
                         val badgeColor = activeMantra?.colorHex?.let { Color(it) } ?: MaterialTheme.colorScheme.primary
                         Box(
@@ -188,14 +334,23 @@ fun CounterScreen(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Column {
-                            Text(
-                                text = activeMantra?.name ?: "Select a Mantra",
-                                style = MaterialTheme.typography.titleMedium.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                ),
-                                maxLines = 1
-                            )
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = activeMantra?.name ?: "Select a Mantra",
+                                    style = MaterialTheme.typography.titleMedium.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    ),
+                                    maxLines = 1
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Icon(
+                                    imageVector = Icons.Default.KeyboardArrowDown,
+                                    contentDescription = "Switch Mantra",
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
                             Text(
                                 text = "Goal: $dailyGoalMalas Mala (${dailyGoalMalas * targetBeads} Jaaps)",
                                 style = MaterialTheme.typography.bodySmall.copy(
@@ -229,7 +384,7 @@ fun CounterScreen(
                         }
 
                         IconButton(
-                            onClick = onNavigateToMantras,
+                            onClick = { showQuickSwitchDialog = true },
                             modifier = Modifier.size(36.dp)
                         ) {
                             Icon(
@@ -280,7 +435,7 @@ fun CounterScreen(
             }
         }
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         // Interactive Mala Beads Wheel
         MalaBeadsWheel(
@@ -291,7 +446,7 @@ fun CounterScreen(
             onTap = { viewModel.onBeadTapped() }
         )
 
-        Spacer(modifier = Modifier.height(18.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         // Quick Controls: Undo, Reset Round, Switch
         Row(
